@@ -1,6 +1,6 @@
 # 冷氣
 class AirConditioner
-  attr_accessor :ispower
+  attr_accessor :ispower, :isopen
 
   def initialize
     @isopen = false
@@ -49,20 +49,14 @@ class AirConditionerController
   end
 
   def print_dashboard
-    puts @dashboard
+    @dashboard
   end
 
   def open
     # 紅外線發射器 = 紅外線模組載入
     require './ir'
     ir = IR.new
-
-    # 設定指令 -> 確認冷氣是否開啟
-    @order = 'check_is_opened'
-    # 設定發射器 -> 紅外線發射器
-    @launcher = ir
-    # 開啟狀態 = 發送問題給冷氣
-    isopen = self.class.send(@ac, @order)
+    isopen = check_if_ac_open?(ir)
 
     # if 開啟狀態 == 沒開
     if isopen == false
@@ -86,5 +80,14 @@ class AirConditionerController
 
   def self.send ac, order
     ac.receiver(order)
+  end
+
+  def check_if_ac_open? ir
+    # 設定指令 -> 確認冷氣是否開啟
+    @order = 'check_is_opened'
+    # 設定發射器 -> 紅外線發射器
+    @launcher = ir
+    # 開啟狀態 = 發送問題給冷氣
+    self.class.send(@ac, @order)
   end
 end
