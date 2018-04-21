@@ -1,10 +1,11 @@
 # 冷氣
 class AirConditioner
-  attr_accessor :ispower, :isopen
+  attr_accessor :ispower, :isopen, :timer
 
   def initialize
     @isopen = false
     @ispower = false
+    @timer = 0
   end
 
   def open!
@@ -20,6 +21,11 @@ class AirConditioner
     end
   end
 
+  # 檢查定時，改變冷氣狀態
+  def check_timer
+    @isopen = false if (@timer_start_time + @timer.hours) < Time.now
+  end
+
   # 指令接收器
   def receiver order
     case order
@@ -33,6 +39,16 @@ class AirConditioner
       end
 
       true
+    when 'set_timer'
+      @timer_start_time = Time.now
+
+      if @timer < 12
+        @timer += 1
+      else
+        @timer = 0
+      end
+
+      return @timer
     else
       return 'unknown order'
     end
@@ -44,7 +60,8 @@ class AirConditionerController
   def initialize ac
     @ac = ac
     @dashboard = {
-      status: 'off'
+      status: 'off',
+      timer: '0 hour'
     }
   end
 
@@ -78,6 +95,14 @@ class AirConditionerController
     end
   end
 
+  def set_timer
+    @order = 'set_timer'
+    result = self.class.send(@ac, @order)
+    @dashboard[:timer] = "#{result} hour"
+
+    result
+  end
+
   def self.send ac, order
     ac.receiver(order)
   end
@@ -89,5 +114,23 @@ class AirConditionerController
     @launcher = ir
     # 開啟狀態 = 發送問題給冷氣
     self.class.send(@ac, @order)
+  end
+end
+
+class Fixnum
+  SECONDS_IN_MINUTES = 60
+  SECONDS_IN_HOUR = 60 * SECONDS_IN_MINUTES
+  SECONDS_IN_DAY = 24 * SECONDS_IN_HOUR
+
+  def days
+    self * SECONDS_IN_DAY
+  end
+
+  def hours
+    self * SECONDS_IN_HOUR
+  end
+
+  def minutes
+    self * SECONDS_IN_MINUTES
   end
 end

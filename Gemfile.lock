@@ -1,0 +1,13 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    timecop (0.9.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  timecop
+
+BUNDLED WITH
+   1.16.1

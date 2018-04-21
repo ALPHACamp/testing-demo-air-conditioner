@@ -61,4 +61,60 @@ RSpec.describe AirConditionerController, "acc" do
     # 預期冷氣遙控器儀表板上 會 顯示 on
     expect(@acc.print_dashboard).to include(:status => "on")
   end
+
+  # 2-5 定時功能
+  it "should add an hour if timer less than 12" do
+    # 定時時間 = 取得小於 12 的亂數
+    timer = rand(0..11)
+    # 冷氣定時時間 = 定時時間
+    @ac.timer = timer
+    # 預期定時時間 = 定時時間 + 1
+    next_timer = timer + 1
+
+    # 預期(冷氣遙控器.定時()) == 預定定時時間
+    expect(@acc.set_timer).to eq(next_timer)
+  end
+
+  it "should reset timer if timer equals 12" do
+    # 冷氣定時時間 = 12
+    @ac.timer = 12
+
+    # 預期(冷氣遙控器.定時()) == 0
+    expect(@acc.set_timer).to eq(0)
+  end
+
+  it "should timer work" do
+    # 冷氣開啟
+    @ac.isopen = true
+    @ac.ispower = true
+    # 冷氣遙控器.定時()
+    @acc.set_timer
+
+    # 59 分鐘過後
+    Timecop.freeze(Time.now + 59.minutes) do
+      @ac.check_timer
+      # 預期(冷氣狀態) == 開啟
+      expect(@ac.isopen).to eq(true)
+    end
+
+    Timecop.return
+
+    # 61 分鐘過後
+    Timecop.freeze(Time.now + 61.minutes) do
+      @ac.check_timer
+      # 預期(冷氣狀態) == 關閉
+      expect(@ac.isopen).to eq(false)
+    end
+  end
+
+  it "should timer info be printed in dashboard" do
+    # 設定 冷氣開啟
+    @ac.isopen = true
+    @ac.ispower = true
+    # 冷氣遙控器.定時()
+    @acc.set_timer
+
+    # 預期 冷氣遙控器儀表板上 會 顯示 定時 1 小時
+    expect(@acc.print_dashboard).to include(:timer => "1 hour")
+  end
 end
